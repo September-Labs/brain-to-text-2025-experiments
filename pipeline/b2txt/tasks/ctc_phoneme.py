@@ -66,12 +66,14 @@ class CTCPhonemeTask(BaseTask):
         phone_seq_lens = batch["phone_seq_lens"].to(self.device)
 
         logits = self.forward_model(model, prepared["features"], prepared["day_indices"])
+        max_len = logits.shape[1]
+        output_lengths = torch.clamp(prepared["output_lengths"], min=1, max=max_len)
         log_probs = logits.log_softmax(dim=-1).transpose(0, 1)
 
         loss = self.loss_fn(
             log_probs,
             labels,
-            prepared["output_lengths"],
+            output_lengths,
             phone_seq_lens,
         )
         loss = torch.mean(loss)
@@ -84,12 +86,14 @@ class CTCPhonemeTask(BaseTask):
         phone_seq_lens = batch["phone_seq_lens"].to(self.device)
 
         logits = self.forward_model(model, prepared["features"], prepared["day_indices"])
+        max_len = logits.shape[1]
+        output_lengths = torch.clamp(prepared["output_lengths"], min=1, max=max_len)
         log_probs = logits.log_softmax(dim=-1).transpose(0, 1)
 
         loss = self.loss_fn(
             log_probs,
             labels,
-            prepared["output_lengths"],
+            output_lengths,
             phone_seq_lens,
         )
         loss = torch.mean(loss)
