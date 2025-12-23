@@ -25,6 +25,7 @@ Evaluate / test
 - Test predictions: `python meta/evaluate.py meta/configs/rnn_gru_baseline.yaml --split test --output runs/rnn_gru_baseline/test_preds.jsonl`
 
 Notes
+- Full walkthrough: `GUIDE.md`
 - `meta/evaluate.py` writes per-trial phoneme predictions (JSONL) when `--output` is provided.
 - `b2txt/data.py` supports unlabeled test data via `allow_unlabeled`.
 - Augmentations are configured under `data.transforms` in the YAML; both train/eval apply them in `b2txt/tasks/ctc_phoneme.py`.
