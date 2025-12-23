@@ -68,6 +68,18 @@ def select_device(training_cfg: Dict[str, object]) -> torch.device:
     return torch.device(device_str)
 
 
+def build_grad_scaler(device_type: str, enabled: bool):
+    if hasattr(torch, "amp") and hasattr(torch.amp, "GradScaler"):
+        return torch.amp.GradScaler(device_type, enabled=enabled)
+    return torch.cuda.amp.GradScaler(enabled=enabled)
+
+
+def autocast_context(device_type: str, enabled: bool):
+    if hasattr(torch, "autocast"):
+        return torch.autocast(device_type=device_type, enabled=enabled, dtype=torch.bfloat16)
+    return torch.cuda.amp.autocast(enabled=enabled, dtype=torch.bfloat16)
+
+
 def build_model(config: Dict[str, object]) -> torch.nn.Module:
     model_cfg = config["model"]
     data_cfg = config["data"]
@@ -259,7 +271,7 @@ def main() -> None:
     scheduler = make_scheduler(optimizer, training_cfg)
 
     use_amp = training_cfg.get("use_amp", False) and device.type == "cuda"
-    scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
+    scaler = build_grad_scaler(device.type, use_amp)
 
     start_step = 0
     resume_ckpt = training_cfg.get("resume_checkpoint")
@@ -293,7 +305,7 @@ def main() -> None:
         global_step = start_step + step
         optimizer.zero_grad()
 
-        with torch.autocast(device_type=device.type, enabled=use_amp, dtype=torch.bfloat16):
+        with autocast_context(device.type, use_amp):
             step_output = task.training_step(model, batch)
             loss = step_output["loss"]
 
