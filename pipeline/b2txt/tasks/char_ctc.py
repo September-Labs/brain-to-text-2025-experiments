@@ -55,7 +55,7 @@ class CharCTCTask(BaseTask):
         for token in ids:
             if token == self.blank_id:
                 continue
-            if token < len(self.id_to_char):
+            if 0 < token < len(self.id_to_char):
                 ch = self.id_to_char[token]
                 if ch is not None:
                     chars.append(ch)
