@@ -59,6 +59,9 @@ class CharCTCTask(BaseTask):
                 ch = self.id_to_char[token]
                 if ch is not None:
                     chars.append(ch)
+            else:
+                # Skip tokens that exceed vocab size (mismatched n_classes/checkpoint).
+                continue
         return "".join(chars)
 
     def _prepare_batch(self, batch: Dict[str, torch.Tensor], mode: str) -> Dict[str, torch.Tensor]:
