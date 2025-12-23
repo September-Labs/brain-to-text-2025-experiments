@@ -5,8 +5,6 @@ from typing import Dict, Tuple
 import numpy as np
 import torch
 import torch.nn.functional as F
-from scipy.ndimage import gaussian_filter1d
-
 
 def gauss_smooth(
     inputs: torch.Tensor,
@@ -16,21 +14,35 @@ def gauss_smooth(
     padding: str = "same",
 ) -> torch.Tensor:
     """Apply 1D Gaussian smoothing along the time axis."""
-    kernel = np.zeros(smooth_kernel_size, dtype=np.float32)
-    kernel[smooth_kernel_size // 2] = 1
-    kernel = gaussian_filter1d(kernel, smooth_kernel_std)
-    valid_idx = np.argwhere(kernel > 0.01)
-    kernel = kernel[valid_idx]
-    kernel = np.squeeze(kernel / np.sum(kernel))
+    if smooth_kernel_size <= 0:
+        return inputs
 
-    kernel_tensor = torch.tensor(kernel, dtype=torch.float32, device=device)
-    kernel_tensor = kernel_tensor.view(1, 1, -1)
+    x = torch.arange(smooth_kernel_size, device=device, dtype=torch.float32)
+    x = x - (smooth_kernel_size // 2)
+    if smooth_kernel_std <= 0:
+        kernel = torch.zeros_like(x)
+        kernel[smooth_kernel_size // 2] = 1.0
+    else:
+        kernel = torch.exp(-0.5 * (x / smooth_kernel_std) ** 2)
+        kernel = kernel / torch.sum(kernel)
+
+    kernel_tensor = kernel.view(1, 1, -1)
 
     batch, time_steps, channels = inputs.shape
     inputs = inputs.permute(0, 2, 1)
     kernel_tensor = kernel_tensor.repeat(channels, 1, 1)
 
-    smoothed = F.conv1d(inputs, kernel_tensor, padding=padding, groups=channels)
+    if isinstance(padding, str):
+        if padding == "same":
+            pad_size = smooth_kernel_size // 2
+        elif padding == "valid":
+            pad_size = 0
+        else:
+            raise ValueError(f"Unsupported padding: {padding}")
+    else:
+        pad_size = int(padding)
+
+    smoothed = F.conv1d(inputs, kernel_tensor, padding=pad_size, groups=channels)
     return smoothed.permute(0, 2, 1)
 
 
