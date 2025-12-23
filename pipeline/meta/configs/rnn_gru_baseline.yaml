@@ -118,6 +118,7 @@ training:
   resume_optimizer: false
   device: null
   require_cuda: true
+  progress_bar: true
 
 validation:
   compute_per: true

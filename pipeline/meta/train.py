@@ -4,6 +4,7 @@ import json
 import logging
 import math
 import sys
+import warnings
 from pathlib import Path
 from typing import Dict
 
@@ -15,6 +16,11 @@ import yaml
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from b2txt.data import BrainToTextDataset, train_test_split_indices, list_sessions
+
+try:
+    from tqdm import tqdm
+except ImportError:  # pragma: no cover
+    tqdm = None
 
 
 def resolve_config_path(config_arg: str) -> Path:
@@ -250,7 +256,7 @@ def main() -> None:
     scheduler = make_scheduler(optimizer, training_cfg)
 
     use_amp = training_cfg.get("use_amp", False) and device.type == "cuda"
-    scaler = torch.cuda.amp.GradScaler(enabled=use_amp)
+    scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
 
     start_step = 0
     resume_ckpt = training_cfg.get("resume_checkpoint")
@@ -270,8 +276,17 @@ def main() -> None:
     save_every = training_cfg.get("save_every_batches", 0)
 
     model.train()
+    show_progress = bool(training_cfg.get("progress_bar", True))
+    train_iter = train_loader
+    if tqdm and show_progress:
+        train_iter = tqdm(
+            train_loader,
+            total=training_cfg["num_training_batches"],
+            dynamic_ncols=True,
+            desc="train",
+        )
 
-    for step, batch in enumerate(train_loader, start=1):
+    for step, batch in enumerate(train_iter, start=1):
         global_step = start_step + step
         optimizer.zero_grad()
 
@@ -296,6 +311,10 @@ def main() -> None:
             logger.info("Step %d | train_loss=%.4f", global_step, loss.item())
             with metrics_path.open("a") as f:
                 f.write(json.dumps({"step": global_step, "train_loss": loss.item()}) + "\n")
+
+        if tqdm and show_progress:
+            lr = optimizer.param_groups[0].get("lr", 0.0)
+            train_iter.set_postfix({"loss": f"{loss.item():.4f}", "lr": f"{lr:.2e}"})
 
         if val_every and global_step % val_every == 0:
             metrics = run_validation(model, val_loader, task)

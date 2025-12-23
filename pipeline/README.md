@@ -30,3 +30,5 @@ Notes
 - `task` in the YAML selects the training/eval logic (e.g., CTC phoneme decoding).
 - `training.require_cuda: true` enforces GPU usage and will error if CUDA is unavailable.
 - For H100, install a CUDA-enabled torch build (e.g. `pip install --index-url https://download.pytorch.org/whl/cu124 torch`).
+- Training progress uses a tqdm bar (disable with `training.progress_bar: false`).
+- The CTC task reports validation loss and phoneme error rate (PER). Word error rate (WER) requires a language model decode step and is not computed in `meta/train.py`.
