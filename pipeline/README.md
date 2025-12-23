@@ -23,6 +23,7 @@ Fine-tune
 Evaluate / test
 - Validation with metrics: `python meta/evaluate.py meta/configs/rnn_gru_baseline.yaml --split val`
 - Test predictions: `python meta/evaluate.py meta/configs/rnn_gru_baseline.yaml --split test --output runs/rnn_gru_baseline/test_preds.jsonl`
+- Submission CSV: `python meta/generate_submission.py meta/configs/rnn_gru_char_ctc.yaml --output runs/rnn_gru_char_ctc/submission.csv`
 
 Notes
 - Full walkthrough: `GUIDE.md`

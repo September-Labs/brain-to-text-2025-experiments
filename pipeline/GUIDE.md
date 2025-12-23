@@ -47,6 +47,20 @@ python pipeline/meta/evaluate.py pipeline/meta/configs/rnn_gru_baseline.yaml \
   --output runs/rnn_gru_baseline/test_preds.jsonl
 ```
 
+Submission CSV (Kaggle format)
+```bash
+python pipeline/meta/generate_submission.py pipeline/meta/configs/rnn_gru_char_ctc.yaml \
+  --checkpoint /srv/s8l_storage/kaggle/aleks/runs/rnn_gru_char_ctc/checkpoints/best.pt \
+  --output runs/rnn_gru_char_ctc/submission.csv
+```
+
+If you already have predictions JSONL:
+```bash
+python pipeline/meta/generate_submission.py pipeline/meta/configs/rnn_gru_char_ctc.yaml \
+  --predictions runs/rnn_gru_char_ctc/test_preds.jsonl \
+  --output runs/rnn_gru_char_ctc/submission.csv
+```
+
 Checkpoint selection
 - By default, `meta/evaluate.py` loads `runs/<experiment>/checkpoints/best.pt`.
 - To override:
