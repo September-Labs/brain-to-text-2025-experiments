@@ -14,6 +14,7 @@ Data
 
 Train (baseline RNN)
 - `python meta/train.py meta/configs/rnn_gru_baseline.yaml`
+- Character CTC (no Redis, local WER): `python meta/train.py meta/configs/rnn_gru_char_ctc.yaml`
 
 Fine-tune
 - Point `training.resume_checkpoint` in the YAML to a previous checkpoint.
@@ -34,6 +35,7 @@ Notes
 - The CTC task reports validation loss and phoneme error rate (PER).
 - Competition WER is supported via the Redis LM decoder; set `competition.wer.enabled: true` and run the LM service before training/validation.
 - To emit decoded sentences during test/eval JSONL output, set `competition.wer.decode_predictions: true`.
+- Character CTC computes WER locally (no LM). Ensure `data.n_classes` matches `len(task.params.vocab) + 1` (blank).
 
 WER + LM service quickstart (from the NEJM baseline)
 1. Start a redis server (if not already running): `redis-server --port 6379`
