@@ -54,7 +54,10 @@ def select_device(training_cfg: Dict[str, object]) -> torch.device:
     device_str = training_cfg.get("device")
     if not device_str:
         device_str = "cuda" if torch.cuda.is_available() else "cpu"
+    require_cuda = bool(training_cfg.get("require_cuda", False))
     if device_str.startswith("cuda") and not torch.cuda.is_available():
+        if require_cuda:
+            raise RuntimeError("CUDA requested but not available.")
         device_str = "cpu"
     return torch.device(device_str)
 

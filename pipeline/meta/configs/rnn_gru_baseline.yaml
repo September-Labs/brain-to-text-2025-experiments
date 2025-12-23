@@ -117,6 +117,7 @@ training:
   resume_checkpoint: null
   resume_optimizer: false
   device: null
+  require_cuda: true
 
 validation:
   compute_per: true

@@ -28,3 +28,5 @@ Notes
 - `b2txt/data.py` supports unlabeled test data via `allow_unlabeled`.
 - Augmentations are configured under `data.transforms` in the YAML; both train/eval apply them in `b2txt/tasks/ctc_phoneme.py`.
 - `task` in the YAML selects the training/eval logic (e.g., CTC phoneme decoding).
+- `training.require_cuda: true` enforces GPU usage and will error if CUDA is unavailable.
+- For H100, install a CUDA-enabled torch build (e.g. `pip install --index-url https://download.pytorch.org/whl/cu124 torch`).
