@@ -106,6 +106,7 @@ def main() -> None:
     parser.add_argument("--checkpoint", type=str, default=None, help="Path to checkpoint file.")
     parser.add_argument("--split", type=str, default="test", choices=["test", "val"], help="Split to decode.")
     parser.add_argument("--output", type=str, required=True, help="Output CSV path.")
+    parser.add_argument("--device", type=str, default=None, help="Override device (e.g., cpu, cuda:0).")
     parser.add_argument(
         "--predictions",
         type=str,
@@ -125,7 +126,11 @@ def main() -> None:
     config = load_config(config_path)
 
     data_cfg = config["data"]
-    training_cfg = config["training"]
+    training_cfg = dict(config["training"])
+    if args.device:
+        training_cfg["device"] = args.device
+        if args.device.startswith("cpu"):
+            training_cfg["require_cuda"] = False
 
     if not data_cfg.get("sessions"):
         data_cfg["sessions"] = list_sessions(data_cfg["dataset_dir"])

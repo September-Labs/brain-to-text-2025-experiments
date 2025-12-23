@@ -54,6 +54,14 @@ python pipeline/meta/generate_submission.py pipeline/meta/configs/rnn_gru_char_c
   --output runs/rnn_gru_char_ctc/submission.csv
 ```
 
+If CUDA is not supported by your torch build (e.g., H100 warning), force CPU:
+```bash
+python pipeline/meta/generate_submission.py pipeline/meta/configs/rnn_gru_char_ctc.yaml \
+  --checkpoint /srv/s8l_storage/kaggle/aleks/runs/rnn_gru_char_ctc/checkpoints/best.pt \
+  --device cpu \
+  --output runs/rnn_gru_char_ctc/submission.csv
+```
+
 If you already have predictions JSONL:
 ```bash
 python pipeline/meta/generate_submission.py pipeline/meta/configs/rnn_gru_char_ctc.yaml \
