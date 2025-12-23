@@ -22,6 +22,7 @@ class RedisLmDecoder:
         blank_penalty: float = 90.0,
         alpha: float = 0.55,
         flush_on_init: bool = False,
+        healthcheck: bool = True,
     ) -> None:
         import redis
 
@@ -43,6 +44,29 @@ class RedisLmDecoder:
         self.final_last_seen = now
         self.reset_last_seen = now
         self.update_last_seen = now
+        self.healthcheck = healthcheck
+
+    def health_check(self) -> tuple[bool, str]:
+        try:
+            self.redis.ping()
+        except Exception as exc:
+            return False, f"Redis ping failed: {exc}"
+
+        missing_streams = []
+        for stream in ("remote_lm_done_resetting", self.output_partial_stream, self.output_final_stream):
+            try:
+                self.redis.xinfo_stream(stream)
+            except Exception:
+                missing_streams.append(stream)
+
+        if missing_streams:
+            return (
+                False,
+                "LM streams not found (LM worker likely not running): "
+                + ", ".join(missing_streams),
+            )
+
+        return True, "OK"
 
     def decode_logits(self, logits: np.ndarray) -> str:
         if logits.ndim == 3:

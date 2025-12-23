@@ -34,3 +34,14 @@ Notes
 - The CTC task reports validation loss and phoneme error rate (PER).
 - Competition WER is supported via the Redis LM decoder; set `competition.wer.enabled: true` and run the LM service before training/validation.
 - To emit decoded sentences during test/eval JSONL output, set `competition.wer.decode_predictions: true`.
+
+WER + LM service quickstart (from the NEJM baseline)
+1. Start a redis server (if not already running): `redis-server --port 6379`
+2. In the NEJM repo root, launch the LM worker:
+   - 1-gram (fast, low RAM):
+     `python language_model/language-model-standalone.py --lm_path language_model/pretrained_language_models/openwebtext_1gram_lm_sil --do_opt --nbest 100 --acoustic_scale 0.325 --blank_penalty 90 --alpha 0.55 --redis_ip localhost --gpu_number 0`
+   - 3-gram (~60GB RAM):
+     `python language_model/language-model-standalone.py --lm_path language_model/pretrained_language_models/openwebtext_3gram_lm_sil --do_opt --nbest 100 --acoustic_scale 0.325 --blank_penalty 90 --alpha 0.55 --redis_ip localhost --gpu_number 0`
+   - 5-gram (~300GB RAM):
+     `python language_model/language-model-standalone.py --lm_path language_model/pretrained_language_models/openwebtext_5gram_lm_sil --rescore --do_opt --nbest 100 --acoustic_scale 0.325 --blank_penalty 90 --alpha 0.55 --redis_ip localhost --gpu_number 0`
+3. Enable WER: set `competition.wer.enabled: true` in the YAML.

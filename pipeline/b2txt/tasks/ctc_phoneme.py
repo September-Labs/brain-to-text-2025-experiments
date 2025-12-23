@@ -45,6 +45,13 @@ class CTCPhonemeTask(BaseTask):
                     decoder_cls = getattr(module, decoder_cfg["class"])
                     params = decoder_cfg.get("params", {})
                     self.decoder = decoder_cls(**params)
+                    if hasattr(self.decoder, "health_check") and self.decoder.healthcheck:
+                        ok, msg = self.decoder.health_check()
+                        if not ok:
+                            if self.wer_strict:
+                                raise ValueError(msg)
+                            warnings.warn(msg)
+                            self.wer_enabled = False
                 except Exception as exc:
                     msg = f"Failed to initialize decoder: {exc}"
                     if self.wer_strict:

@@ -106,6 +106,7 @@ competition:
         blank_penalty: 90.0
         alpha: 0.55
         flush_on_init: false
+        healthcheck: true
 
 ctc:
   blank_id: 0
