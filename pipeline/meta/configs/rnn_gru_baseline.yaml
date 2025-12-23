@@ -1,0 +1,122 @@
+experiment:
+  name: rnn_gru_baseline
+  output_dir: runs/rnn_gru_baseline
+  seed: 10
+
+data:
+  dataset_dir: /srv/s8l_storage/kaggle/data/brain-to-text-25/hdf5_data_final
+  n_input_features: 512
+  n_classes: 41
+  batch_size: 64
+  val_batch_size: 64
+  days_per_batch: 4
+  num_workers: 4
+  loader_shuffle: false
+  seed: 1
+  must_include_days: null
+  feature_subset: null
+  bad_trials_dict: null
+  sessions:
+    - t15.2023.08.11
+    - t15.2023.08.13
+    - t15.2023.08.18
+    - t15.2023.08.20
+    - t15.2023.08.25
+    - t15.2023.08.27
+    - t15.2023.09.01
+    - t15.2023.09.03
+    - t15.2023.09.24
+    - t15.2023.09.29
+    - t15.2023.10.01
+    - t15.2023.10.06
+    - t15.2023.10.08
+    - t15.2023.10.13
+    - t15.2023.10.15
+    - t15.2023.10.20
+    - t15.2023.10.22
+    - t15.2023.11.03
+    - t15.2023.11.04
+    - t15.2023.11.17
+    - t15.2023.11.19
+    - t15.2023.11.26
+    - t15.2023.12.03
+    - t15.2023.12.08
+    - t15.2023.12.10
+    - t15.2023.12.17
+    - t15.2023.12.29
+    - t15.2024.02.25
+    - t15.2024.03.03
+    - t15.2024.03.08
+    - t15.2024.03.15
+    - t15.2024.03.17
+    - t15.2024.04.25
+    - t15.2024.04.28
+    - t15.2024.05.10
+    - t15.2024.06.14
+    - t15.2024.07.19
+    - t15.2024.07.21
+    - t15.2024.07.28
+    - t15.2025.01.10
+    - t15.2025.01.12
+    - t15.2025.03.14
+    - t15.2025.03.16
+    - t15.2025.03.30
+    - t15.2025.04.13
+  transforms:
+    white_noise_std: 1.0
+    constant_offset_std: 0.2
+    random_walk_std: 0.0
+    random_walk_axis: -1
+    static_gain_std: 0.0
+    random_cut: 3
+    smooth_kernel_size: 100
+    smooth_kernel_std: 2
+    smooth_data: true
+
+model:
+  module: models.architectures.rnn_gru
+  class: GRUDecoder
+  params:
+    n_units: 768
+    rnn_dropout: 0.4
+    input_dropout: 0.2
+    n_layers: 5
+    patch_size: 14
+    patch_stride: 4
+
+task:
+  module: b2txt.tasks.ctc_phoneme
+  class: CTCPhonemeTask
+
+ctc:
+  blank_id: 0
+  output_length:
+    type: patch
+    patch_size: 14
+    patch_stride: 4
+
+training:
+  num_training_batches: 120000
+  use_amp: true
+  compile: false
+  lr: 0.005
+  weight_decay: 0.001
+  betas: [0.9, 0.999]
+  epsilon: 0.1
+  lr_scheduler:
+    type: cosine
+    warmup_steps: 1000
+    decay_steps: 120000
+    min_lr: 0.0001
+  grad_clip_norm: 10
+  log_every_batches: 200
+  val_every_batches: 2000
+  save_every_batches: 0
+  save_best: true
+  save_last: true
+  resume_checkpoint: null
+  resume_optimizer: false
+  device: null
+
+validation:
+  compute_per: true
