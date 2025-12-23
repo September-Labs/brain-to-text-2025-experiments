@@ -88,6 +88,25 @@ task:
   module: b2txt.tasks.ctc_phoneme
   class: CTCPhonemeTask
 
+competition:
+  wer:
+    enabled: false
+    strict: false
+    max_trials: null
+    decode_predictions: false
+    decoder:
+      module: b2txt.decoders.redis_lm
+      class: RedisLmDecoder
+      params:
+        host: localhost
+        port: 6379
+        db: 0
+        update_params: false
+        acoustic_scale: 0.35
+        blank_penalty: 90.0
+        alpha: 0.55
+        flush_on_init: false
+
 ctc:
   blank_id: 0
   output_length:
@@ -119,6 +138,7 @@ training:
   device: null
   require_cuda: true
   progress_bar: true
+  suppress_warnings: true
 
 validation:
   compute_per: true

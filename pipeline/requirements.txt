@@ -3,3 +3,4 @@ numpy
 h5py
 pyyaml
 tqdm
+redis

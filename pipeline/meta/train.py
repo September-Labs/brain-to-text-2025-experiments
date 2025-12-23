@@ -163,6 +163,9 @@ def main() -> None:
     data_cfg = config["data"]
     training_cfg = config["training"]
 
+    if training_cfg.get("suppress_warnings", False):
+        warnings.filterwarnings("ignore")
+
     if not data_cfg.get("sessions"):
         data_cfg["sessions"] = list_sessions(data_cfg["dataset_dir"])
 

@@ -88,6 +88,7 @@ class BrainToTextDataset(Dataset):
             "phone_seq_lens": [],
             "day_indicies": [],
             "transcriptions": [],
+            "sentence_labels": [],
             "block_nums": [],
             "trial_nums": [],
         }
@@ -125,11 +126,19 @@ class BrainToTextDataset(Dataset):
                         else:
                             raise KeyError("transcription not found")
 
+                        if "sentence_label" in group.attrs:
+                            sentence_label = group.attrs["sentence_label"]
+                        elif self.allow_unlabeled:
+                            sentence_label = ""
+                        else:
+                            raise KeyError("sentence_label not found")
+
                         batch["seq_class_ids"].append(seq_class_ids)
                         batch["transcriptions"].append(transcription)
                         batch["n_time_steps"].append(group.attrs["n_time_steps"])
                         batch["phone_seq_lens"].append(seq_len)
                         batch["day_indicies"].append(int(day))
+                        batch["sentence_labels"].append(sentence_label)
                         batch["block_nums"].append(group.attrs["block_num"])
                         batch["trial_nums"].append(group.attrs["trial_num"])
                     except Exception:
