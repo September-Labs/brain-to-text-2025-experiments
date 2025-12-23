@@ -1,6 +1,6 @@
 experiment:
   name: rnn_gru_baseline
-  output_dir: runs/rnn_gru_baseline
+  output_dir: /srv/s8l_storage/kaggle/aleks/runs/rnn_gru_baseline
   seed: 10
 
 data:

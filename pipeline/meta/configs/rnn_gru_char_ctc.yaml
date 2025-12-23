@@ -1,6 +1,6 @@
 experiment:
   name: rnn_gru_char_ctc
-  output_dir: runs/rnn_gru_char_ctc
+  output_dir: /srv/s8l_storage/kaggle/aleks/runs/rnn_gru_char_ctc
   seed: 10
 
 data:
