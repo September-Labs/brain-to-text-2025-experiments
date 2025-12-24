@@ -238,11 +238,16 @@ def main() -> None:
         must_include_days=data_cfg.get("must_include_days"),
         feature_subset=data_cfg.get("feature_subset"),
     )
+    num_workers = data_cfg.get("num_workers", 0)
+    prefetch_factor = data_cfg.get("prefetch_factor", 2)
     train_loader = DataLoader(
         train_dataset,
         batch_size=None,
         shuffle=data_cfg.get("loader_shuffle", False),
-        num_workers=data_cfg.get("num_workers", 0),
+        num_workers=num_workers,
+        pin_memory=(device.type == "cuda"),
+        persistent_workers=bool(num_workers),
+        prefetch_factor=prefetch_factor if num_workers else None,
     )
 
     val_dataset = BrainToTextDataset(
@@ -258,7 +263,10 @@ def main() -> None:
         val_dataset,
         batch_size=None,
         shuffle=False,
-        num_workers=data_cfg.get("num_workers", 0),
+        num_workers=num_workers,
+        pin_memory=(device.type == "cuda"),
+        persistent_workers=bool(num_workers),
+        prefetch_factor=prefetch_factor if num_workers else None,
     )
 
     optimizer = torch.optim.AdamW(

@@ -165,11 +165,16 @@ def main() -> None:
         feature_subset=data_cfg.get("feature_subset"),
         allow_unlabeled=True,
     )
+    num_workers = data_cfg.get("num_workers", 0)
+    prefetch_factor = data_cfg.get("prefetch_factor", 2)
     loader = DataLoader(
         dataset,
         batch_size=None,
         shuffle=False,
-        num_workers=data_cfg.get("num_workers", 0),
+        num_workers=num_workers,
+        pin_memory=(device.type == "cuda"),
+        persistent_workers=bool(num_workers),
+        prefetch_factor=prefetch_factor if num_workers else None,
     )
 
     model.eval()
