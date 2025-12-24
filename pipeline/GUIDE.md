@@ -80,6 +80,10 @@ python pipeline/meta/evaluate.py pipeline/meta/configs/rnn_gru_baseline.yaml \
 
 Optional: competition WER with Redis LM (baseline task)
 1. Start Redis and the LM worker from the NEJM baseline repo.
+   - Verify Redis is reachable: `redis-cli ping` (should return `PONG`).
+   - If Redis is local, pass `--redis_ip localhost` when launching the LM worker.
+   - Use proper line continuations (`\`) so args are not split into separate shell commands.
+   - For multi-user setups, give each LM worker unique stream names and match them in YAML.
 2. In `pipeline/meta/configs/rnn_gru_baseline.yaml`, set:
    - `competition.wer.enabled: true`
 3. Run training or evaluation to get `val_wer`.
