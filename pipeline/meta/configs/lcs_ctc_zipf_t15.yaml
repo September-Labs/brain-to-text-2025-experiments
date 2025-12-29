@@ -110,19 +110,19 @@ competition:
     decode_predictions: true
     strict: false
     decoder:
-      module: b2txt.decoders.redis_lm
-      class: RedisLmDecoder
+      module: b2txt.decoders.api_lm
+      class: ApiLmDecoder
       params:
-        host: localhost
-        port: 6379
-        input_stream: remote_lm_input_aleks
-        output_partial_stream: remote_lm_output_partial_aleks
-        output_final_stream: remote_lm_output_final_aleks
-        acoustic_scale: 0.325
-        blank_penalty: 90.0
+        base_url: http://magpie.wordcab.com:8043
+        api_key_env: B2TXT_LM_API_KEY
+        nbest: 100
         alpha: 0.55
-        update_params: false
-        healthcheck: false
+        blank_penalty: 90.0
+        timeout_seconds: 600.0
+        max_retries: 5
+        retry_wait: 2.0
+        reorder_logits: true
+        healthcheck: true
 
 ctc:
   blank_id: 0

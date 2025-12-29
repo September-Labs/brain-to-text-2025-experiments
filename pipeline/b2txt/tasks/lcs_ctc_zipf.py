@@ -13,6 +13,7 @@ from b2txt.alignment import ctc_forced_align
 from b2txt.augmentations import apply_transforms
 from b2txt.constants import LOGIT_TO_PHONEME
 from b2txt.ctc import compute_output_lengths, greedy_decode, edit_distance
+from b2txt.decoders import default_api_decoder_cfg
 from b2txt.metrics import word_error_stats
 from b2txt.tasks.base import BaseTask
 
@@ -59,14 +60,16 @@ class LCSCTCZipfTask(BaseTask):
         self.decode_predictions = bool(self.wer_cfg.get("decode_predictions", False))
         self.decoder = None
 
-        if self.wer_enabled:
-            decoder_cfg = self.wer_cfg.get("decoder")
+        decoder_required = self.wer_enabled or self.decode_predictions
+        if decoder_required:
+            decoder_cfg = self.wer_cfg.get("decoder") or default_api_decoder_cfg()
             if not decoder_cfg:
-                msg = "WER enabled but no decoder configured."
+                msg = "Decoder enabled but no decoder configured."
                 if self.wer_strict:
                     raise ValueError(msg)
                 warnings.warn(msg)
                 self.wer_enabled = False
+                self.decode_predictions = False
             else:
                 try:
                     module = importlib.import_module(decoder_cfg["module"])
@@ -80,12 +83,14 @@ class LCSCTCZipfTask(BaseTask):
                                 raise ValueError(msg)
                             warnings.warn(msg)
                             self.wer_enabled = False
+                            self.decode_predictions = False
                 except Exception as exc:
                     msg = f"Failed to initialize decoder: {exc}"
                     if self.wer_strict:
                         raise
                     warnings.warn(msg)
                     self.wer_enabled = False
+                    self.decode_predictions = False
 
     def forward_model(
         self,
@@ -127,8 +132,16 @@ class LCSCTCZipfTask(BaseTask):
 
     def _apply_zipf_bias(self, logits: torch.Tensor, zipf_weights: torch.Tensor) -> torch.Tensor:
         log_prior = torch.log(zipf_weights.clamp_min(1e-8))
+        if log_prior.dim() == 2 and logits.dim() == 3:
+            log_prior = log_prior.unsqueeze(1)
+        if log_prior.shape[-1] != logits.shape[-1]:
+            if log_prior.shape[-1] < logits.shape[-1]:
+                pad = logits.shape[-1] - log_prior.shape[-1]
+                log_prior = F.pad(log_prior, (0, pad))
+            else:
+                log_prior = log_prior[..., : logits.shape[-1]]
         if not self.zipf_apply_blank:
-            log_prior[:, self.blank_id] = 0.0
+            log_prior[..., self.blank_id] = 0.0
         return logits + (self.zipf_boost * log_prior)
 
     def _compute_alignment_and_updates(
@@ -270,11 +283,13 @@ class LCSCTCZipfTask(BaseTask):
         wer_words = 0
         if self.wer_enabled and self.decoder and "sentence_labels" in batch:
             logits_np = logits.detach().float().cpu().numpy()
+            lengths_np = output_lengths.detach().cpu().numpy()
             trial_count = len(preds)
             if self._wer_remaining is not None:
                 trial_count = min(trial_count, self._wer_remaining)
             for idx in range(trial_count):
-                pred_sentence = self.decoder.decode_logits(logits_np[idx])
+                t_len = int(lengths_np[idx]) if idx < len(lengths_np) else logits_np.shape[1]
+                pred_sentence = self.decoder.decode_logits(logits_np[idx, :t_len])
                 true_sentence = batch["sentence_labels"][idx]
                 edits, words = word_error_stats(true_sentence, pred_sentence)
                 wer_edits += edits
@@ -340,8 +355,10 @@ class LCSCTCZipfTask(BaseTask):
         output_dict: Dict[str, object] = {"pred_ids": preds}
         if self.decoder and self.decode_predictions:
             logits_np = logits.detach().float().cpu().numpy()
+            lengths_np = output_lengths.detach().cpu().numpy()
             output_dict["pred_sentences"] = [
-                self.decoder.decode_logits(logits_np[i]) for i in range(len(preds))
+                self.decoder.decode_logits(logits_np[i, : int(lengths_np[i])])
+                for i in range(len(preds))
             ]
         return output_dict
 
